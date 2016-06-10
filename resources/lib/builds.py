@@ -218,7 +218,7 @@ class BaseExtractor(object):
 
 class BuildLinkExtractor(BaseExtractor):
     """Base class for extracting build links from a URL"""
-    BUILD_RE = (".*OpenELEC.*-{arch}-(?:\d+\.\d+-|)[a-zA-Z]+-(\d+)"
+    BUILD_RE = (".*LibreELEC.*-{arch}-(?:\d+\.\d+-|)[a-zA-Z]+-(\d+)"
                 "-r\d+[a-z]*-g([0-9a-z]+)\.tar(|\.bz2)")
     CSS_CLASS = None
 
@@ -252,7 +252,7 @@ class ReleaseLinkExtractor(BuildLinkExtractor):
 
        Overrides _create_link to return a ReleaseLink for each link.
     """
-    BUILD_RE = ".*OpenELEC.*-{arch}-([\d\.]+)\.tar(|\.bz2)"
+    BUILD_RE = ".*LibreELEC.*-{arch}-([\d\.]+)\.tar(|\.bz2)"
     BASE_URL = None
 
     def _create_link(self, link):
@@ -266,11 +266,11 @@ class OfficialReleaseLinkExtractor(ReleaseLinkExtractor):
 
 
 class DualAudioReleaseLinkExtractor(ReleaseLinkExtractor):
-    BUILD_RE = ".*OpenELEC-{arch}.DA-([\d\.]+)\.tar(|\.bz2)"
+    BUILD_RE = ".*LibreELEC-{arch}.DA-([\d\.]+)\.tar(|\.bz2)"
 
 
 class MilhouseBuildLinkExtractor(BuildLinkExtractor):
-    BUILD_RE = ("OpenELEC-{arch}-(?:\d+\.\d+-|)"
+    BUILD_RE = ("LibreELEC-{arch}-(?:\d+\.\d+-|)"
                 "Milhouse-(\d+)-(?:r|%23)(\d+[a-z]*)-g[0-9a-z]+\.tar(|\.bz2)")
 
 
@@ -413,7 +413,7 @@ class MilhouseBuildsURL(BuildsURL):
     def __init__(self, subdir="master"):
         self.subdir = subdir
         super(MilhouseBuildsURL, self).__init__(
-            "http://milhouse.openelec.tv/builds/", os.path.join(subdir, arch.split('.')[0]),
+            "http://milhouse.libreelec.tv/builds/", os.path.join(subdir, arch.split('.')[0]),
             MilhouseBuildLinkExtractor, list(get_milhouse_build_info_extractors()))
 
     def __repr__(self):
@@ -428,7 +428,7 @@ def get_installed_build():
     """Return the currently installed build object."""
     DEVEL_RE = "devel-(\d+)-r\d+-g([a-z0-9]+)"
 
-    if openelec.OS_RELEASE['NAME'] == "OpenELEC":
+    if openelec.OS_RELEASE['NAME'] == "LibreELEC":
         version = openelec.OS_RELEASE['VERSION']
         if 'MILHOUSE_BUILD' in openelec.OS_RELEASE:
             DEVEL_RE = "devel-(\d+)-[r#](\d{4}[a-z]?)"
@@ -451,24 +451,10 @@ def sources():
     """
     _sources = OrderedDict()
 
-    builds_url = BuildsURL("http://snapshots.openelec.tv",
-                           info_extractors=[CommitInfoExtractor()])
-    _sources["Official Snapshot Builds"] = builds_url
-
     _sources["Milhouse Builds"] = MilhouseBuildsURL()
 
     if openelec.debug_system_partition():
         _sources["Milhouse Builds (debug)"] = MilhouseBuildsURL(subdir="debug")
-
-    if arch.startswith("RPi"):
-        builds_url = BuildsURL("http://resources.pichimney.com/OpenELEC/dev_builds",
-                               info_extractors=[CommitInfoExtractor()])
-        _sources["Chris Swan RPi Builds"] = builds_url
-
-    _sources["Official Releases"] = BuildsURL("http://openelec.mirrors.uk2.net",
-                                              extractor=OfficialReleaseLinkExtractor)
-    _sources["Official Archive"] = BuildsURL("http://archive.openelec.tv",
-                                             extractor=ReleaseLinkExtractor)
 
     return _sources
 
